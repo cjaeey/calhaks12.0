@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ReNOVA API Test</title>
+</head>
+<body>
+    <h1>ReNOVA API Test</h1>
+    <button id="testBtn">Test API Connection</button>
+    <pre id="result"></pre>
+
+    <script>
+        document.getElementById('testBtn').addEventListener('click', async () => {
+            const result = document.getElementById('result');
+            result.textContent = 'Testing...';
+
+            try {
+                const response = await fetch('http://localhost:3001/api/jobs', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        prompt: 'test hvac repair',
+                        city: 'San Francisco',
+                        state: 'CA'
+                    })
+                });
+
+                const data = await response.json();
+                result.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                result.textContent = 'Error: ' + error.message;
+            }
+        });
+    </script>
+</body>
+</html>
