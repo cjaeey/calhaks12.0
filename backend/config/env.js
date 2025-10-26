@@ -13,6 +13,13 @@ const envSchema = z.object({
   // Anthropic
   ANTHROPIC_API_KEY: z.string().default('demo-key-for-testing'),
 
+  // Lava Payments (optional proxy for AI billing)
+  USE_LAVA: z.string().default('false'),
+  LAVA_FORWARD_TOKEN: z.string().optional(),
+  LAVA_SECRET_KEY: z.string().optional(),
+  LAVA_CONNECTION_SECRET: z.string().optional(),
+  LAVA_PRODUCT_SECRET: z.string().optional(),
+
   // Yelp Fusion API
   YELP_API_KEY: z.string().optional(),
 

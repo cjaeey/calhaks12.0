@@ -4,10 +4,10 @@ Fetch.ai uAgent for Agentverse deployment
 """
 import os
 import json
-import anthropic
 from datetime import datetime
 from uagents import Agent, Context, Protocol
 from models import JobRequest, JobScope, ProgressUpdate, ErrorMessage
+from lava_client import lava_claude_client
 
 # Create agent
 intake_agent = Agent(
@@ -17,10 +17,8 @@ intake_agent = Agent(
     endpoint=["http://localhost:8001/submit"],
 )
 
-# Initialize Claude client
-claude_client = anthropic.Anthropic(
-    api_key=os.getenv("ANTHROPIC_API_KEY", "demo-key")
-)
+# Use Lava-enabled Claude client
+claude_client = lava_claude_client
 
 # Define protocol
 intake_protocol = Protocol("JobIntakeProtocol")
@@ -52,13 +50,13 @@ Respond with ONLY a JSON object matching this schema:
   "location_requirements": "any specific location notes"
 }}"""
 
-        response = claude_client.messages.create(
+        response = claude_client.create_message(
             model="claude-3-opus-20240229",
             max_tokens=1024,
             messages=[{"role": "user", "content": message}]
         )
 
-        content = response.content[0].text
+        content = response["content"][0]["text"]
         ctx.logger.info(f"Claude response: {content[:100]}...")
 
         # Extract JSON

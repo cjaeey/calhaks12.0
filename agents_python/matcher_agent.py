@@ -4,10 +4,10 @@ Fetch.ai uAgent for Agentverse deployment
 """
 import os
 import json
-import anthropic
 from datetime import datetime
 from uagents import Agent, Context, Protocol
 from models import MatchRequest, MatchResults, ProgressUpdate, ErrorMessage
+from lava_client import lava_claude_client
 
 # Create agent
 matcher_agent = Agent(
@@ -17,10 +17,8 @@ matcher_agent = Agent(
     endpoint=["http://localhost:8004/submit"],
 )
 
-# Initialize Claude client
-claude_client = anthropic.Anthropic(
-    api_key=os.getenv("ANTHROPIC_API_KEY", "demo-key")
-)
+# Use Lava-enabled Claude client
+claude_client = lava_claude_client
 
 # Define protocol
 matcher_protocol = Protocol("MatcherProtocol")
@@ -65,13 +63,13 @@ Return JSON array ONLY:
 
 Sort by score descending."""
 
-        response = claude_client.messages.create(
+        response = claude_client.create_message(
             model="claude-3-opus-20240229",
             max_tokens=2048,
             messages=[{"role": "user", "content": prompt}]
         )
 
-        content = response.content[0].text
+        content = response["content"][0]["text"]
         ctx.logger.info(f"Claude ranking response: {content[:100]}...")
 
         # Extract JSON array

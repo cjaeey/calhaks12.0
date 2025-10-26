@@ -1,11 +1,53 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
+import axios from 'axios';
 import config from '../config/env.js';
 import logger from '../utils/logger.js';
 
+// Initialize Anthropic client (used when Lava is disabled)
 const client = new Anthropic({
   apiKey: config.ANTHROPIC_API_KEY,
 });
+
+// Lava configuration
+const USE_LAVA = config.USE_LAVA === 'true';
+const LAVA_FORWARD_TOKEN = config.LAVA_FORWARD_TOKEN;
+const LAVA_API_URL = 'https://api.lavapayments.com/v1/forward';
+const ANTHROPIC_BASE_URL = 'https://api.anthropic.com/v1/messages';
+
+/**
+ * Make Claude API call through Lava proxy or direct
+ */
+async function makeClaudeRequest(params) {
+  if (!USE_LAVA) {
+    // Direct Anthropic API call
+    return await client.messages.create(params);
+  }
+
+  // Route through Lava
+  try {
+    logger.info('Routing Claude request through Lava proxy');
+
+    const response = await axios.post(
+      `${LAVA_API_URL}?u=${encodeURIComponent(ANTHROPIC_BASE_URL)}`,
+      params,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${LAVA_FORWARD_TOKEN}`,
+          'anthropic-version': '2023-06-01',
+          'x-api-key': config.ANTHROPIC_API_KEY,
+        },
+      }
+    );
+
+    logger.info({ usage: response.data.usage }, 'Lava request completed');
+    return response.data;
+  } catch (error) {
+    logger.error({ error: error.message }, 'Lava request failed');
+    throw error;
+  }
+}
 
 // Schema for job scope extraction
 const JobScopeSchema = z.object({
@@ -64,7 +106,7 @@ Respond with a JSON object matching this schema:
       },
     ];
 
-    const response = await client.messages.create({
+    const response = await makeClaudeRequest({
       model: 'claude-3-haiku-20240307',
       max_tokens: 1024,
       messages,
@@ -122,7 +164,7 @@ Return JSON matching this schema:
   "bio": "optional"
 }`;
 
-    const response = await client.messages.create({
+    const response = await makeClaudeRequest({
       model: 'claude-3-haiku-20240307',
       max_tokens: 1024,
       messages: [{ role: 'user', content: prompt }],
@@ -178,7 +220,7 @@ Return JSON array:
 
 Sort by score descending.`;
 
-    const response = await client.messages.create({
+    const response = await makeClaudeRequest({
       model: 'claude-3-haiku-20240307',
       max_tokens: 2048,
       messages: [{ role: 'user', content: prompt }],
