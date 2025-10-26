@@ -30,35 +30,50 @@ ReNOVA connects homeowners and businesses with verified building professionals u
 
 ### Prerequisites
 
-- Node.js 20+
-- Redis (for pub/sub)
-- Docker & Docker Compose (optional)
-- Anthropic API key
+- **Docker Desktop** installed and running
+- **Anthropic API key** (required)
+- **At least 4GB RAM** for Docker
 
-### Installation
+### One-Command Setup
 
 ```bash
 # Clone the repository
-git clone <repo-url>
-cd renova
+git clone https://github.com/cjaeey/calhaks12.0.git
+cd calhaks12.0
 
-# Copy environment variables
-cp .env.example .env
+# Start everything with one command!
+./start.sh
 
-# Add your Anthropic API key to .env
-# ANTHROPIC_API_KEY=your_key_here
+# That's it! Open http://localhost:3000
+```
 
-# Install dependencies
+The `start.sh` script will:
+- ✅ Create `.env` from template
+- ✅ Build Docker containers
+- ✅ Start all services (frontend, backend, Redis, ChromaDB)
+- ✅ Wait for health checks
+- ✅ Show you the URLs
+
+### Alternative: Using Make Commands
+
+```bash
+# Install dependencies locally
 make install
 
-# Start services with Docker
+# Start with Docker Compose
 make up
+
+# View logs
+make logs
 
 # Seed demo data
 make seed
 
-# Open http://localhost:3000
+# Stop services
+make down
 ```
+
+📖 **Detailed Docker guide:** See [DOCKER_SETUP.md](DOCKER_SETUP.md)
 
 ### Local Development (without Docker)
 
