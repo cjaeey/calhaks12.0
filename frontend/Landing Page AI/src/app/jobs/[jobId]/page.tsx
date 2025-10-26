@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { ProgressTracker } from '../../../components/ProgressTracker';
 import { MatchResults } from '../../../components/MatchResults';
 import { Footer } from '../../../components/Footer';

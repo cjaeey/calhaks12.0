@@ -65,7 +65,7 @@ Respond with a JSON object matching this schema:
     ];
 
     const response = await client.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-3-haiku-20240307',
       max_tokens: 1024,
       messages,
     });
@@ -123,7 +123,7 @@ Return JSON matching this schema:
 }`;
 
     const response = await client.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-3-haiku-20240307',
       max_tokens: 1024,
       messages: [{ role: 'user', content: prompt }],
     });
@@ -179,7 +179,7 @@ Return JSON array:
 Sort by score descending.`;
 
     const response = await client.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-3-haiku-20240307',
       max_tokens: 2048,
       messages: [{ role: 'user', content: prompt }],
     });

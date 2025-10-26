@@ -45,3 +45,11 @@ Thumbs.db
 # Cache
 .cache/
 .parcel-cache/
+
+# Python
+venv/
+env/
+*.pyc
+__pycache__/
+*.egg-info/
+.Python

@@ -9,7 +9,9 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { createJob, parseLocation } from "../lib/api";
+import { createJob, parseLocation, getJob } from "../lib/api";
+import { ProgressTracker } from "./ProgressTracker";
+import axios from "axios";
 
 export function IntakeForm() {
   const router = useRouter();
@@ -17,6 +19,8 @@ export function IntakeForm() {
   const [error, setError] = useState("");
   const [matches, setMatches] = useState<any[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const [jobId, setJobId] = useState<string | null>(null);
+  const [showProgress, setShowProgress] = useState(false);
   const [formData, setFormData] = useState({
     description: "",
     location: "",
@@ -28,6 +32,7 @@ export function IntakeForm() {
     setError("");
     setIsSubmitting(true);
     setShowResults(false);
+    setShowProgress(false);
 
     try {
       // Parse location
@@ -38,7 +43,7 @@ export function IntakeForm() {
         ? `${formData.description}\n\nBudget: ${formData.budget}`
         : formData.description;
 
-      // Create job - now returns matches immediately
+      // Create job - returns job ID immediately
       const response = await createJob({
         prompt: fullPrompt,
         city,
@@ -46,13 +51,30 @@ export function IntakeForm() {
         zipCode,
       });
 
-      // Show results inline
-      setMatches(response.matches || []);
-      setShowResults(true);
+      // Show progress tracker
+      setJobId(response.jobId);
+      setShowProgress(true);
       setIsSubmitting(false);
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || 'Failed to submit project');
       setIsSubmitting(false);
+    }
+  };
+
+  const handleProgressComplete = async () => {
+    if (!jobId) return;
+
+    try {
+      // Fetch the completed job results
+      const job = await getJob(jobId);
+      if (job.result && job.result.matches) {
+        setMatches(job.result.matches);
+        setShowResults(true);
+        setShowProgress(false);
+      }
+    } catch (err: any) {
+      setError('Failed to fetch results');
+      setShowProgress(false);
     }
   };
 
@@ -65,16 +87,18 @@ export function IntakeForm() {
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <div className="text-center mb-12">
-            <h2 className="text-4xl lg:text-5xl mb-4">
-              Find Your Professional
-            </h2>
-            <p className="text-xl text-gray-600">
-              Tell us about your project and get matched with verified pros
-            </p>
-          </div>
+          {!showProgress && !showResults && (
+            <>
+              <div className="text-center mb-12">
+                <h2 className="text-4xl lg:text-5xl mb-4">
+                  Find Your Professional
+                </h2>
+                <p className="text-xl text-gray-600">
+                  Tell us about your project and get matched with verified pros
+                </p>
+              </div>
 
-          <Card className="p-8 bg-white">
+              <Card className="p-8 bg-white">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Project Description */}
               <div className="space-y-2">
@@ -149,6 +173,13 @@ export function IntakeForm() {
               </p>
             </form>
           </Card>
+            </>
+          )}
+
+          {/* Progress Tracker */}
+          {showProgress && jobId && (
+            <ProgressTracker jobId={jobId} onComplete={handleProgressComplete} />
+          )}
 
           {/* Results Section */}
           {showResults && matches.length > 0 && (

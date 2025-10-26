@@ -3,12 +3,41 @@ import { nanoid } from 'nanoid';
 import coordinatorAgent from '../agents/coordinatorAgent.js';
 import { getRedisClient, getRedisSubscriber } from '../config/redisClient.js';
 import { getMatches } from '../config/chromaClient.js';
+import { storeJob, getJob, updateJob } from '../services/jobStore.js';
 import logger from '../utils/logger.js';
 
 const router = express.Router();
 
-// In-memory job store (in production, use Redis or DB)
-const jobs = new Map();
+/**
+ * Process job asynchronously in the background
+ */
+async function processJobAsync(jobId, job) {
+  try {
+    // Update job status
+    await updateJob(jobId, { status: 'processing' });
+
+    // Process the job through the agent pipeline
+    const result = await coordinatorAgent.process(job);
+
+    // Update job with results
+    await updateJob(jobId, {
+      status: 'completed',
+      result,
+      completedAt: new Date().toISOString(),
+    });
+
+    logger.info({ jobId, matchCount: result.matches?.length }, 'Job completed successfully');
+  } catch (error) {
+    // Update job with error
+    await updateJob(jobId, {
+      status: 'failed',
+      error: error.message,
+      failedAt: new Date().toISOString(),
+    });
+
+    logger.error({ error, jobId }, 'Job processing failed');
+  }
+}
 
 /**
  * POST /api/jobs - Create a new job
@@ -35,35 +64,21 @@ router.post('/', async (req, res) => {
       createdAt: new Date().toISOString(),
     };
 
-    jobs.set(jobId, job);
+    // Store job in Redis
+    await storeJob(job);
     logger.info({ jobId, city, state }, 'New job created');
 
-    // YOLO MODE: Process synchronously and return results immediately
-    try {
-      const result = await coordinatorAgent.process(job);
-      job.status = 'completed';
-      job.result = result;
-      jobs.set(jobId, job);
+    // Return job ID immediately and process in background
+    res.status(201).json({
+      jobId,
+      message: 'Job created and processing started',
+      status: 'pending',
+    });
 
-      // Return matches directly
-      res.status(201).json({
-        jobId,
-        message: 'Job completed successfully',
-        status: 'completed',
-        matches: result.matches || [],
-        count: result.matches?.length || 0,
-      });
-    } catch (error) {
-      job.status = 'failed';
-      job.error = error.message;
-      jobs.set(jobId, job);
-      logger.error({ error, jobId }, 'Job processing failed');
-
-      res.status(500).json({
-        error: 'Job processing failed',
-        message: error.message,
-      });
-    }
+    // Process job asynchronously (don't await)
+    processJobAsync(jobId, job).catch(err => {
+      logger.error({ error: err, jobId }, 'Async job processing error');
+    });
   } catch (error) {
     logger.error({ error }, 'Failed to create job');
     res.status(500).json({ error: 'Failed to create job' });
@@ -76,7 +91,7 @@ router.post('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const job = jobs.get(id);
+    const job = await getJob(id);
 
     if (!job) {
       return res.status(404).json({ error: 'Job not found' });
@@ -96,7 +111,7 @@ router.get('/:id/events', async (req, res) => {
   const { id: jobId } = req.params;
 
   try {
-    const job = jobs.get(jobId);
+    const job = await getJob(jobId);
     if (!job) {
       return res.status(404).json({ error: 'Job not found' });
     }
@@ -156,7 +171,7 @@ router.get('/:id/results', async (req, res) => {
   try {
     const { id: jobId } = req.params;
 
-    const job = jobs.get(jobId);
+    const job = await getJob(jobId);
     if (!job) {
       return res.status(404).json({ error: 'Job not found' });
     }

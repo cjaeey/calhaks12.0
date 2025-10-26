@@ -1,0 +1,24 @@
+# Fetch.ai uAgents SDK
+uagents>=0.12.0
+
+# Anthropic Claude API
+anthropic>=0.17.0
+
+# HTTP requests
+requests>=2.31.0
+
+# Async support
+aiohttp>=3.9.0
+
+# Flask API bridge
+flask>=3.0.0
+flask-cors>=4.0.0
+
+# ChromaDB client (optional, for vector search)
+chromadb>=0.4.0
+
+# Redis client (for progress updates)
+redis>=5.0.0
+
+# Environment variables
+python-dotenv>=1.0.0
