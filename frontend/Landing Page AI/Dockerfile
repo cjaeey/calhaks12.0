@@ -14,6 +14,10 @@ RUN npm install && npm cache clean --force
 # Copy application code
 COPY . .
 
+# Set environment variable
+ARG NEXT_PUBLIC_API_URL=http://localhost:8080
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+
 EXPOSE 3000
 
 # Health check

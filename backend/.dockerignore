@@ -1,42 +1,15 @@
-# Dependencies
-node_modules
-npm-debug.log
-yarn-error.log
-package-lock.json
-
-# Environment
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+ENV/
 .env
-.env.local
-.env.*.local
-
-# Testing
-coverage
-.nyc_output
-
-# IDE
-.vscode
-.idea
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Data
-chroma_data
-*.sqlite3
 *.log
-
-# Git
 .git
 .gitignore
-
-# Docker
-Dockerfile
-.dockerignore
-docker-compose.yml
-
-# Documentation
-README.md
 *.md
+chroma_data/*
+!chroma_data/.gitkeep

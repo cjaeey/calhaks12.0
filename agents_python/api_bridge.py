@@ -35,7 +35,7 @@ def health():
     })
 
 
-@app.route('/api/jobs', methods=['POST'])
+@app.route('/api/jobs', methods=['POST']) # does nothing?
 async def create_job():
     """
     Create a new job and send to coordinator agent
@@ -82,7 +82,7 @@ async def create_job():
         return jsonify({"error": str(e)}), 500
 
 
-@app.route('/api/agents/status', methods=['GET'])
+@app.route('/api/agents/status', methods=['GET']) # useless
 def agent_status():
     """Get status of all agents"""
     return jsonify({
@@ -128,7 +128,7 @@ def agent_addresses():
 
 if __name__ == '__main__':
     print("🌉 Starting ReNOVA Agent Bridge API...")
-    print("   Endpoint: http://localhost:5000")
+    print("   Endpoint: http://localhost:8080")
     print("   Coordinator: " + str(coordinator.address))
     print("\nAvailable endpoints:")
     print("   GET  /health - Health check")
@@ -136,4 +136,4 @@ if __name__ == '__main__':
     print("   GET  /api/agents/status - Agent status")
     print("   GET  /api/agents/addresses - Agent addresses")
 
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=8080, debug=True)

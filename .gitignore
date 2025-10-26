@@ -27,11 +27,6 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
-# ChromaDB data
-chroma_data/
-*.sqlite3
-*.sqlite3-journal
-
 # IDE
 .vscode/
 .idea/

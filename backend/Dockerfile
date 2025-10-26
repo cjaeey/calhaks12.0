@@ -1,33 +1,33 @@
-FROM node:20-slim
-
-# Install dependencies for native modules
-RUN apt-get update && apt-get install -y \
-    curl \
-    python3 \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
+FROM python:3.11-slim
 
 WORKDIR /app
 
-# Copy package files first for better caching
-COPY package*.json ./
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install dependencies
-RUN npm install && npm cache clean --force
+# Copy requirements
+COPY requirements.txt requirement.txt* ./
+
+# Install Python dependencies
+RUN pip install --no-cache-dir \
+    flask \
+    flask-cors \
+    chromadb \
+    sentence-transformers \
+    python-dotenv \
+    requests \
+    python-multipart
 
 # Copy application code
 COPY . .
 
-# Rebuild native modules for container architecture
-RUN npm rebuild sharp --platform=linux --arch=arm64
-
 # Create chroma_data directory
 RUN mkdir -p chroma_data
 
-EXPOSE 3001
+# Expose port
+EXPOSE 8080
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD curl -f http://localhost:3001/health || exit 1
-
-CMD ["npm", "run", "dev"]
+# Run the application
+CMD ["python", "api_bridge.py"]

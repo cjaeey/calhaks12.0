@@ -22,16 +22,20 @@ export function useSSE(url: string | null, onEvent?: (event: ProgressEvent) => v
     if (!url) return;
 
     let eventSource: EventSource | null = null;
+    let isClosed = false;
 
     try {
       eventSource = new EventSource(url);
 
       eventSource.onopen = () => {
+        if (isClosed) return;
         setIsConnected(true);
         setError(null);
       };
 
       eventSource.onmessage = (event) => {
+        if (isClosed) return;
+
         try {
           const data: ProgressEvent = JSON.parse(event.data);
 
@@ -45,6 +49,7 @@ export function useSSE(url: string | null, onEvent?: (event: ProgressEvent) => v
           // Check if done
           if (data.stage === 'done' || data.stage === 'error') {
             setIsDone(true);
+            isClosed = true;
             eventSource?.close();
           }
         } catch (err) {
@@ -53,9 +58,17 @@ export function useSSE(url: string | null, onEvent?: (event: ProgressEvent) => v
       };
 
       eventSource.onerror = (err) => {
+        if (isClosed) return;
+
         console.error('SSE error:', err);
-        setError('Connection error');
+
+        // Only set error if we haven't completed successfully
+        if (!isClosed) {
+          setError('Connection error');
+        }
+
         setIsConnected(false);
+        isClosed = true;
         eventSource?.close();
       };
     } catch (err) {
@@ -64,10 +77,11 @@ export function useSSE(url: string | null, onEvent?: (event: ProgressEvent) => v
     }
 
     return () => {
+      isClosed = true;
       eventSource?.close();
       setIsConnected(false);
     };
-  }, [url, onEvent]);
+  }, [url]); // Removed onEvent from dependencies
 
   return {
     events,

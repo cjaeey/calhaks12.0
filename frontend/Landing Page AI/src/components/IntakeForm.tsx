@@ -53,6 +53,7 @@ export function IntakeForm() {
 
       // Show progress tracker
       setJobId(response.jobId);
+      console.log(response.jobId)
       setShowProgress(true);
       setIsSubmitting(false);
     } catch (err: any) {
@@ -65,14 +66,23 @@ export function IntakeForm() {
     if (!jobId) return;
 
     try {
+      console.log('Fetching job results for:', jobId);
       // Fetch the completed job results
       const job = await getJob(jobId);
+      console.log('Job response:', job);
+
       if (job.result && job.result.matches) {
+        console.log('Found matches:', job.result.matches);
         setMatches(job.result.matches);
         setShowResults(true);
         setShowProgress(false);
+      } else {
+        console.error('No matches found in result:', job);
+        setError('No designers found. Please try a different search.');
+        setShowProgress(false);
       }
     } catch (err: any) {
+      console.error('Failed to fetch results:', err);
       setError('Failed to fetch results');
       setShowProgress(false);
     }

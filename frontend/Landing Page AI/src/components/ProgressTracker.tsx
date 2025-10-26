@@ -22,11 +22,13 @@ const stageInfo = {
 };
 
 export function ProgressTracker({ jobId, onComplete }: ProgressTrackerProps) {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
   const eventsUrl = `${apiUrl}/api/jobs/${jobId}/events`;
 
   const { events, isDone, error } = useSSE(eventsUrl, (event) => {
+    console.log('SSE event received:', event);
     if (event.stage === 'done' && onComplete) {
+      console.log('Job done, calling onComplete in 1.5s');
       setTimeout(onComplete, 1500);
     }
   });

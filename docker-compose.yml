@@ -1,22 +1,4 @@
 services:
-  redis:
-    image: redis:7-alpine
-    container_name: renova-redis
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    command: redis-server --appendonly yes
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-      start_period: 5s
-    networks:
-      - renova-network
-
   chromadb:
     image: chromadb/chroma:latest
     container_name: renova-chromadb
@@ -28,35 +10,49 @@ services:
     environment:
       - IS_PERSISTENT=TRUE
       - ANONYMIZED_TELEMETRY=FALSE
-      - CHROMA_SERVER_CORS_ALLOW_ORIGINS=["*"]
     networks:
       - renova-network
 
+  redis:
+    image: redis:7-alpine
+    container_name: renova-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - renova-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
   backend:
     build:
-      context: ./backend
+      context: ./agents_js
       dockerfile: Dockerfile
     container_name: renova-backend
     restart: unless-stopped
     ports:
-      - "3001:3001"
+      - "8080:3001"
     environment:
       - NODE_ENV=development
-      - REDIS_URL=redis://redis:6379/0
+      - PORT=3001
       - CHROMA_HOST=chromadb
       - CHROMA_PORT=8000
-      - PORT=3001
+      - REDIS_URL=redis://redis:6379/0
+      - FRONTEND_URL=http://localhost:3000
+      - CORS_ORIGINS=http://localhost:3000
     env_file:
       - .env
     volumes:
-      - ./backend:/app
+      - ./agents_js:/app
       - /app/node_modules
-      - chroma_data:/app/chroma_data
     depends_on:
-      redis:
-        condition: service_healthy
-      chromadb:
-        condition: service_started
+      - chromadb
+      - redis
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
       interval: 30s
@@ -65,19 +61,20 @@ services:
       start_period: 40s
     networks:
       - renova-network
-    command: npm run dev
 
   frontend:
     build:
       context: ./frontend/Landing Page AI
       dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=http://backend:8080
     container_name: renova-frontend
     restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=development
-      - NEXT_PUBLIC_API_URL=http://localhost:3001
+      - NEXT_PUBLIC_API_URL=http://localhost:8080
     volumes:
       - ./frontend/Landing Page AI:/app
       - /app/node_modules
@@ -96,9 +93,9 @@ services:
     command: npm run dev
 
 volumes:
-  redis_data:
-    driver: local
   chroma_data:
+    driver: local
+  redis_data:
     driver: local
 
 networks:
