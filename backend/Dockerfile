@@ -1,7 +1,11 @@
-FROM node:20-alpine
+FROM node:20-slim
 
-# Install curl for healthchecks
-RUN apk add --no-cache curl
+# Install dependencies for native modules
+RUN apt-get update && apt-get install -y \
+    curl \
+    python3 \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -13,6 +17,9 @@ RUN npm install && npm cache clean --force
 
 # Copy application code
 COPY . .
+
+# Rebuild native modules for container architecture
+RUN npm rebuild sharp --platform=linux --arch=arm64
 
 # Create chroma_data directory
 RUN mkdir -p chroma_data
