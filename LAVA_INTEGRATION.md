@@ -79,15 +79,29 @@ ps_live_2F1dod5eDHIONcxQ-n590LH-Llo5yo0G1zGhqKjQZhbnjD0_9MfZXRlb
          ▼
     ┌────────┐
     │  Lava  │ ◄── Tracks usage, billing
-    │  Proxy │
+    │  Proxy │      (with auto-fallback)
     └────┬───┘
+         │ ✓ Success
+         │
+         │ ✗ Credits exhausted/Failed
          │
          ▼
 ┌────────────────┐
-│  Anthropic     │
+│  Anthropic     │ ◄── Direct API fallback
 │  Claude API    │
 └────────────────┘
 ```
+
+### Automatic Fallback System
+
+**ReNOVA never stops working!** If Lava credits are exhausted or the proxy fails:
+
+1. ✅ **First**: Try Lava proxy (tracks usage and billing)
+2. ⚠️ **If fails**: Automatically detect error (402, 429, or credit-related)
+3. 🔄 **Fallback**: Switch to direct Anthropic API seamlessly
+4. ✅ **Continue**: Application works without interruption
+
+**Zero downtime** - Users never see an error!
 
 ### Backend (Node.js)
 
@@ -188,6 +202,63 @@ export ANTHROPIC_API_KEY=your_key
 # Run intake agent
 python intake_agent.py
 ```
+
+## 🛡️ Automatic Fallback Protection
+
+### What Happens When Lava Credits Run Out?
+
+**Don't worry!** ReNOVA automatically switches to your Anthropic credits:
+
+```bash
+# Logs you'll see when Lava credits are exhausted:
+
+[INFO] Routing Claude request through Lava proxy
+[WARN] ⚠️  Lava credits exhausted or payment error - falling back to direct Anthropic API
+[INFO] 🔄 Using direct Anthropic API as fallback
+[INFO] ✅ Fallback request completed successfully
+```
+
+### Fallback Scenarios
+
+The system automatically falls back in these cases:
+
+| Scenario | HTTP Code | Behavior |
+|----------|-----------|----------|
+| Lava credits exhausted | 402 | Auto-fallback to Anthropic |
+| Rate limit exceeded | 429 | Auto-fallback to Anthropic |
+| Lava service unavailable | 5xx | Auto-fallback to Anthropic |
+| Network timeout | Timeout | Auto-fallback to Anthropic |
+| Any Lava error | Any | Auto-fallback to Anthropic |
+
+### How to Know Which API is Being Used?
+
+**Check your logs:**
+
+```bash
+# Backend logs (Node.js)
+cd backend
+npm run dev
+
+# Python agent logs
+cd agents_python
+python intake_agent.py
+
+# Look for these messages:
+# ✅ Using Lava: "Routing Claude request through Lava proxy"
+# ⚠️ Fallback: "Falling back to direct Anthropic API"
+# ✓ Direct: "Using direct Anthropic API (Lava disabled)"
+```
+
+### Credit Management Strategy
+
+For CalHacks demo:
+
+1. **Start with Lava enabled** (`USE_LAVA=true`)
+2. **Monitor dashboard** for credit usage
+3. **If credits run low**, system auto-falls back
+4. **Optionally disable** Lava manually by setting `USE_LAVA=false`
+
+**No code changes needed** - it's all automatic!
 
 ## 🔍 Troubleshooting
 

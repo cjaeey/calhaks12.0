@@ -64,7 +64,7 @@ class LavaClaudeClient:
         **kwargs
     ) -> Dict:
         """
-        Make request through Lava proxy
+        Make request through Lava proxy with automatic fallback
         """
         payload = {
             "model": model,
@@ -91,16 +91,34 @@ class LavaClaudeClient:
             return result
 
         except requests.exceptions.RequestException as e:
-            print(f"❌ Lava request failed: {str(e)}")
-            # Fallback to direct API call if Lava fails
+            # Check if it's a credit/payment error
+            is_payment_error = False
+            if hasattr(e, 'response') and e.response is not None:
+                is_payment_error = (e.response.status_code == 402 or
+                                  e.response.status_code == 429)
+
+            error_msg = str(e).lower()
+            is_credit_error = 'credit' in error_msg or 'insufficient' in error_msg
+
+            if is_payment_error or is_credit_error:
+                print("⚠️  Lava credits exhausted or payment error detected")
+            else:
+                print(f"⚠️  Lava request failed: {str(e)}")
+
+            # Fallback to direct API call
             print("🔄 Falling back to direct Anthropic API...")
-            response = self.anthropic_client.messages.create(
-                model=model,
-                max_tokens=max_tokens,
-                messages=messages,
-                **kwargs
-            )
-            return response.model_dump()
+            try:
+                response = self.anthropic_client.messages.create(
+                    model=model,
+                    max_tokens=max_tokens,
+                    messages=messages,
+                    **kwargs
+                )
+                print("✅ Fallback request completed successfully")
+                return response.model_dump()
+            except Exception as fallback_error:
+                print(f"❌ Both Lava and direct API failed: {str(fallback_error)}")
+                raise fallback_error
 
 
 # Global instance

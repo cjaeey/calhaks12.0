@@ -15,6 +15,7 @@ ReNOVA connects homeowners and businesses with verified building professionals u
 - **Smart Matching**: Vector similarity search + AI reasoning for optimal contractor matches
 - **Beautiful UI**: Figma-designed responsive interface with smooth animations
 - **Zero SQL**: All data stored in ChromaDB vector database
+- **Usage-Based Billing**: Lava Payments integration with automatic fallback to direct API
 
 ## 🎯 How It Works
 
@@ -221,6 +222,33 @@ curl -X POST http://localhost:3001/api/jobs \
   }'
 ```
 
+## 🌋 Lava Payments Integration (Optional)
+
+ReNOVA supports **Lava Payments** for AI usage tracking and billing:
+
+```bash
+# Quick setup
+./setup-lava.sh
+
+# Or manually set in .env
+USE_LAVA=true
+LAVA_FORWARD_TOKEN=your_token_here
+```
+
+**Features:**
+- Real-time usage and cost tracking
+- Automatic fallback to direct Anthropic API if credits exhausted
+- Zero downtime - transparent switching
+- Dashboard analytics at https://www.lavapayments.com/dashboard
+
+**How it works:**
+1. Lava acts as a transparent proxy to Anthropic Claude API
+2. Tracks every API call with usage metrics
+3. If Lava credits run out, automatically falls back to your Anthropic credits
+4. Application continues working seamlessly
+
+📖 **Full documentation:** See [LAVA_INTEGRATION.md](LAVA_INTEGRATION.md)
+
 ## 🎨 UI Components
 
 The frontend uses a Figma-designed component system:
@@ -272,6 +300,7 @@ MIT License - see [LICENSE](LICENSE) file for details
 
 - **Fetch.ai** - Multi-agent orchestration
 - **Anthropic** - Claude AI for natural language understanding
+- **Lava Payments** - Usage-based AI billing with automatic fallback
 - **Bright Data** - Web scraping infrastructure
 - **ChromaDB** - Vector database for embeddings
 - **CalHacks 12.0** - Hackathon inspiration and community

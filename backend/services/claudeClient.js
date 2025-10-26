@@ -17,14 +17,16 @@ const ANTHROPIC_BASE_URL = 'https://api.anthropic.com/v1/messages';
 
 /**
  * Make Claude API call through Lava proxy or direct
+ * Automatically falls back to direct Anthropic API if Lava fails
  */
 async function makeClaudeRequest(params) {
   if (!USE_LAVA) {
     // Direct Anthropic API call
+    logger.info('Using direct Anthropic API (Lava disabled)');
     return await client.messages.create(params);
   }
 
-  // Route through Lava
+  // Try routing through Lava first
   try {
     logger.info('Routing Claude request through Lava proxy');
 
@@ -38,14 +40,38 @@ async function makeClaudeRequest(params) {
           'anthropic-version': '2023-06-01',
           'x-api-key': config.ANTHROPIC_API_KEY,
         },
+        timeout: 30000, // 30 second timeout
       }
     );
 
-    logger.info({ usage: response.data.usage }, 'Lava request completed');
+    logger.info({ usage: response.data.usage }, 'Lava request completed successfully');
     return response.data;
   } catch (error) {
-    logger.error({ error: error.message }, 'Lava request failed');
-    throw error;
+    // Check if it's a credit/payment issue
+    const isPaymentError = error.response?.status === 402 ||
+                          error.response?.status === 429 ||
+                          error.message?.toLowerCase().includes('credit') ||
+                          error.message?.toLowerCase().includes('insufficient');
+
+    if (isPaymentError) {
+      logger.warn('⚠️  Lava credits exhausted or payment error - falling back to direct Anthropic API');
+    } else {
+      logger.warn({
+        error: error.message,
+        status: error.response?.status
+      }, '⚠️  Lava request failed - falling back to direct Anthropic API');
+    }
+
+    // Fallback to direct Anthropic API
+    try {
+      logger.info('🔄 Using direct Anthropic API as fallback');
+      const fallbackResponse = await client.messages.create(params);
+      logger.info('✅ Fallback request completed successfully');
+      return fallbackResponse;
+    } catch (fallbackError) {
+      logger.error({ error: fallbackError.message }, '❌ Both Lava and direct API failed');
+      throw fallbackError;
+    }
   }
 }
 
