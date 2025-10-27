@@ -34,23 +34,14 @@ export function MatchResults({ matches }: MatchResultsProps) {
             transition={{ duration: 0.4, delay: index * 0.1 }}
           >
             <Card className="p-6 hover:shadow-xl transition-shadow">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <h3 className="text-2xl mb-2">{match.name}</h3>
-                  <div className="flex items-center gap-3 text-gray-600 mb-2">
-                    <span className="font-semibold text-blue-600">{match.trade}</span>
-                    <span>•</span>
-                    <div className="flex items-center gap-1">
-                      <MapPin className="w-4 h-4" />
-                      {match.city}, {match.state}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex-shrink-0 ml-4">
-                  <div className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-2xl font-bold px-6 py-3 rounded-lg text-center">
-                    {match.score}
-                    <div className="text-xs font-normal opacity-90">/ 100</div>
+              <div className="mb-4">
+                <h3 className="text-2xl mb-2">{match.name}</h3>
+                <div className="flex items-center gap-3 text-gray-600 mb-2">
+                  <span className="font-semibold text-blue-600">{match.trade}</span>
+                  <span>•</span>
+                  <div className="flex items-center gap-1">
+                    <MapPin className="w-4 h-4" />
+                    {match.city}, {match.state}
                   </div>
                 </div>
               </div>
@@ -93,9 +84,6 @@ export function MatchResults({ matches }: MatchResultsProps) {
               {/* AI Reasoning */}
               {match.reason && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                  <div className="text-sm font-semibold text-blue-900 mb-2">
-                    Why this match:
-                  </div>
                   <p className="text-sm text-blue-800">{match.reason}</p>
                 </div>
               )}

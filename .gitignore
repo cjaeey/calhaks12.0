@@ -48,3 +48,4 @@ env/
 __pycache__/
 *.egg-info/
 .Python
+.vercel

@@ -6,6 +6,7 @@ const apiClient = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': 'true',
   },
 });
 
@@ -77,7 +78,10 @@ export async function getJobResults(jobId: string): Promise<JobResults> {
  * Get SSE event source URL
  */
 export function getJobEventsUrl(jobId: string): string {
-  return `${API_URL}/api/jobs/${jobId}/events`;
+  // Add ngrok-skip-browser-warning as query param since EventSource doesn't support custom headers
+  const url = new URL(`${API_URL}/api/jobs/${jobId}/events`);
+  url.searchParams.set('ngrok-skip-browser-warning', 'true');
+  return url.toString();
 }
 
 /**

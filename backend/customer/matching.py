@@ -46,7 +46,6 @@ def matching(promt):
               "services": ["Design Consultation", "Space Planning"],
               "rating": 4.5,
               "price_band": "medium",
-              "score": score,
               "reason": f"Matched based on design style and preferences. Profile: {document[:100]}...",
               "website": f"https://instagram.com/{designer_id}"
           }

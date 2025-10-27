@@ -235,9 +235,9 @@ export function IntakeForm() {
                       </div>
                       <div className="ml-4 text-right">
                         <div className="text-2xl font-bold text-blue-600">
-                          {match.score}
+                           
                         </div>
-                        <div className="text-xs text-gray-500">Match Score</div>
+                        <div className="text-xs text-gray-500"> </div>
                         {match.website && (
                           <a
                             href={match.website}

@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { Hero } from "./components/Hero";
-import { HowItWorks } from "./components/HowItWorks";
-import { AIShowcase } from "./components/AIShowcase";
-import { FeaturedTrades } from "./components/FeaturedTrades";
-import { IntakeForm } from "./components/IntakeForm";
-import { CTASection } from "./components/CTASection";
-import { Footer } from "./components/Footer";
-import { PostProjectModal } from "./components/PostProjectModal";
+import { Hero } from "./src/components/Hero";
+import { HowItWorks } from "./src/components/HowItWorks";
+import { AIShowcase } from "./src/components/AIShowcase";
+import { FeaturedTrades } from "./src/components/FeaturedTrades";
+import { IntakeForm } from "./src/components/IntakeForm";
+import { CTASection } from "./src/components/CTASection";
+import { Footer } from "./src/components/Footer";
+import { PostProjectModal } from "./src/components/PostProjectModal";
 
 export default function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
